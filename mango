@@ -1,0 +1,90 @@
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+local Window = Library:NewWindow("mega fuck niggers menu by fqe_a")
+
+-- Moves
+local Moves = Window:NewSection("Moves")
+
+Moves:CreateButton("malevolent shrine", function()
+    ReplicatedStorage:WaitForChild("MalevolentShrine"):FireServer()
+end)
+
+Moves:CreateButton("20-20-20 dropkick", function()
+    ReplicatedStorage:WaitForChild("KJDropkick"):WaitForChild("Remotes"):WaitForChild("DropKick"):FireServer()
+end)
+
+Moves:CreateButton("no more games", function()
+    ReplicatedStorage:WaitForChild("Jun"):WaitForChild("No More Games"):WaitForChild("Remote"):WaitForChild("NGM"):FireServer()
+end)
+
+Moves:CreateButton("glimpse of power variant", function()
+    local char = player.Character
+    if not char then return end
+    workspace:WaitForChild(char.Name):WaitForChild("Glimpse Of Power Variant"):WaitForChild("Cliente"):WaitForChild("RemoteEvent"):FireServer()
+end)
+
+Moves:CreateButton("5 seasons", function()
+    local char = player.Character
+    if not char then return end
+    local args = {
+        [1] = "Ability",
+        [2] = "Season",
+        [3] = {
+            char = char,
+            player = player,
+            root = char:WaitForChild("HumanoidRootPart"),
+            hum = char:WaitForChild("Humanoid")
+        }
+    }
+    ReplicatedStorage:WaitForChild("Server"):InvokeServer(unpack(args))
+end)
+
+-- PS+
+local ps = Window:NewSection("PS+")
+
+ps:CreateButton("shutdown server (VIP)", function()
+    ReplicatedStorage.PSRemotes.ShutdownServer:FireServer()
+end)
+
+ps:CreateButton("spawn inf hp dummy", function()
+    ReplicatedStorage.PSRemotes.SpawnInfDummy:FireServer()
+end)
+
+ps:CreateButton("delete dummies", function()
+    ReplicatedStorage.PSRemotes.DeleteDummies:FireServer()
+end)
+
+ps:CreateButton("spawn dummy", function()
+    ReplicatedStorage.PSRemotes.SpawnDummy:FireServer()
+end)
+
+ps:CreateButton("spawn one hp dummy", function()
+    ReplicatedStorage.PSRemotes.SpawnOneDummy:FireServer()
+end)
+
+-- Characters
+local charTab = Window:NewSection("Characters")
+
+charTab:CreateButton("admin", function()
+    local args = {[1] = "Admin"}
+    local char = player.Character
+    if not char then return end
+    workspace:WaitForChild(char.Name, 9e9):WaitForChild("Change Character", 9e9):WaitForChild("ChangeCharacter", 9e9):FireServer(unpack(args))
+end)
+
+charTab:CreateButton("gojo", function()
+    local args = {[1] = "Gojo"}
+    local char = player.Character
+    if not char then return end
+    workspace:WaitForChild(char.Name, 9e9):WaitForChild("Change Character", 9e9):WaitForChild("ChangeCharacter", 9e9):FireServer(unpack(args))
+end)
+
+charTab:CreateButton("builder", function()
+    local args = {[1] = "Builder"}
+    local char = player.Character
+    if not char then return end
+    workspace:WaitForChild(char.Name, 9e9):WaitForChild("Change Character", 9e9):WaitForChild("ChangeCharacter", 9e9):FireServer(unpack(args))
+end)
