@@ -1,0 +1,294 @@
+-- SERVICES
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+
+-- FOLDER
+if makefolder and not isfolder("workspace/songs") then
+	makefolder("workspace/songs")
+end
+
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.ResetOnSpawn = false
+
+-- MAIN GUI
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.fromScale(0.42,0.72)
+main.Position = UDim2.fromScale(0.29,0.16)
+main.BackgroundColor3 = Color3.fromRGB(18,18,24)
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,20)
+
+-- STROKE (NEON)
+local stroke = Instance.new("UIStroke", main)
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(0,120,255)
+stroke.Transparency = 0.45
+
+-- TOP BAR
+local top = Instance.new("Frame", main)
+top.Size = UDim2.new(1,0,0,46)
+top.BackgroundColor3 = Color3.fromRGB(26,26,34)
+Instance.new("UICorner", top).CornerRadius = UDim.new(0,20)
+
+local function topBtn(text,x)
+	local b = Instance.new("TextButton", top)
+	b.Size = UDim2.new(0,36,0,36)
+	b.Position = UDim2.new(1,x,0,5)
+	b.Text = text
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 18
+	b.BackgroundColor3 = Color3.fromRGB(45,45,60)
+	b.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", b).CornerRadius = UDim.new(1,0)
+	return b
+end
+
+local fxBtn = topBtn("FX",-120)
+local minBtn = topBtn("-", -78)
+local closeBtn = topBtn("X", -40)
+
+-- MINI VISUALIZER (TOP BAR)
+local bars = {}
+for i=1,20 do
+	local bar = Instance.new("Frame", top)
+	bar.AnchorPoint = Vector2.new(0.5,0)
+	bar.Position = UDim2.new(i/21,0,0,4)
+	bar.Size = UDim2.new(0,5,0,6)
+	bar.BackgroundColor3 = Color3.fromHSV(i/20,1,1)
+	Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+	table.insert(bars,bar)
+end
+
+-- CONTENT
+local content = Instance.new("Frame", main)
+content.Position = UDim2.new(0,10,0,60)
+content.Size = UDim2.new(1,-20,1,-70)
+content.BackgroundTransparency = 1
+
+-- SONG LIST
+local list = Instance.new("ScrollingFrame", content)
+list.Size = UDim2.new(1,0,0.36,0)
+list.CanvasSize = UDim2.new()
+list.BackgroundColor3 = Color3.fromRGB(22,22,30)
+list.ScrollBarImageTransparency = 0.4
+Instance.new("UICorner", list).CornerRadius = UDim.new(0,14)
+
+-- SOUND
+local sound = Instance.new("Sound", SoundService)
+sound.Volume = 1
+sound.PlaybackSpeed = 1
+
+local eq = Instance.new("EqualizerSoundEffect", sound)
+
+-- STATE
+local songs = {}
+local current = nil
+local selected = nil
+local playing = false
+local looped = false
+local bassPower = 1
+
+-- LOAD FILES
+if listfiles then
+	for _,v in ipairs(listfiles("workspace/songs/")) do
+		if v:match("%.mp3") or v:match("%.wav") or v:match("%.ogg") then
+			table.insert(songs,v)
+		end
+	end
+end
+
+-- SONG BUTTONS
+for i,v in ipairs(songs) do
+	local b = Instance.new("TextButton", list)
+	b.Size = UDim2.new(1,-10,0,34)
+	b.Position = UDim2.new(0,5,0,(i-1)*38)
+	b.Text = v:match("[^/]+$")
+	b.BackgroundColor3 = Color3.fromRGB(32,32,42)
+	b.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+
+	b.MouseButton1Click:Connect(function()
+		if selected then
+			selected.BackgroundColor3 = Color3.fromRGB(32,32,42)
+		end
+		selected = b
+		b.BackgroundColor3 = Color3.fromRGB(70,120,255)
+		current = i
+		sound.SoundId = getcustomasset(v)
+		if playing then sound:Play() end
+	end)
+end
+list.CanvasSize = UDim2.new(0,0,0,#songs*38)
+
+-- BASE TEXTBOX
+local function box(y,placeholder,cb)
+	local t = Instance.new("TextBox", content)
+	t.Size = UDim2.new(1,0,0.078,0)
+	t.Position = UDim2.new(0,0,y,0)
+	t.PlaceholderText = placeholder
+	t.Text = ""
+	t.BackgroundColor3 = Color3.fromRGB(32,32,42)
+	t.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", t).CornerRadius = UDim.new(0,12)
+	t.FocusLost:Connect(function()
+		local v = tonumber(t.Text)
+		if v then cb(v) end
+	end)
+end
+
+box(0.40,"Speed",function(v) sound.PlaybackSpeed=v end)
+box(0.50,"Volume",function(v) sound.Volume=v end)
+box(0.60,"Bass (0-50)",function(v) bassPower=v end) -- теперь до 50
+
+-- PLAY / LOOP
+local function bigBtn(text,y)
+	local b = Instance.new("TextButton", content)
+	b.Size = UDim2.new(1,0,0.085,0)
+	b.Position = UDim2.new(0,0,y,0)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(70,90,160)
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,14)
+	return b
+end
+
+local playBtn = bigBtn("PLAY",0.72)
+local loopBtn = bigBtn("LOOP: OFF",0.82)
+loopBtn.BackgroundColor3 = Color3.fromRGB(45,45,60)
+
+playBtn.MouseButton1Click:Connect(function()
+	playing = not playing
+	playBtn.Text = playing and "STOP" or "PLAY"
+	if playing then sound:Play() else sound:Stop() end
+end)
+
+loopBtn.MouseButton1Click:Connect(function()
+	looped = not looped
+	sound.Looped = looped
+	loopBtn.Text = looped and "LOOP: ON" or "LOOP: OFF"
+end)
+
+-- AUTOPLAY
+sound.Ended:Connect(function()
+	if not looped and current and current < #songs then
+		current += 1
+		sound.SoundId = getcustomasset(songs[current])
+		sound:Play()
+	end
+end)
+
+-- FX FRAME (ДРАГАБЛЕ, ВЫСОТА УВЕЛИЧЕНА В 2 РАЗА)
+local fx = Instance.new("Frame", gui)
+fx.Size = UDim2.new(0.48,0,0.9,0) -- 2 раза выше
+fx.Position = UDim2.new(main.Position.X.Scale,0,-0.9,0)
+fx.BackgroundColor3 = Color3.fromRGB(16,16,22)
+fx.Visible = false
+fx.Active = true
+fx.Draggable = true
+Instance.new("UICorner", fx).CornerRadius = UDim.new(0,20)
+
+-- FX TITLE
+local fxTitle = Instance.new("TextLabel", fx)
+fxTitle.Size = UDim2.new(1,0,0,40)
+fxTitle.Position = UDim2.new(0,0,0,0)
+fxTitle.BackgroundTransparency = 1
+fxTitle.Text = "FX SETTINGS"
+fxTitle.Font = Enum.Font.GothamBold
+fxTitle.TextColor3 = Color3.new(1,1,1)
+fxTitle.TextSize = 20
+
+-- FX SCROLLER
+local fxScroll = Instance.new("ScrollingFrame", fx)
+fxScroll.Size = UDim2.new(1,-20,1,-50)
+fxScroll.Position = UDim2.new(0,10,0,50)
+fxScroll.BackgroundTransparency = 1
+fxScroll.CanvasSize = UDim2.new(0,0,0,600)
+fxScroll.ScrollBarImageTransparency = 0.4
+
+-- FX BOX FUNCTION
+local function fxBox(y,text,cb)
+	local t = Instance.new("TextBox", fxScroll)
+	t.Size = UDim2.new(1,0,0,34)
+	t.Position = UDim2.new(0,0,0,y)
+	t.PlaceholderText = text
+	t.Text = ""
+	t.BackgroundColor3 = Color3.fromRGB(34,34,44)
+	t.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", t).CornerRadius = UDim.new(0,12)
+	t.FocusLost:Connect(function()
+		local v = tonumber(t.Text)
+		if v then cb(v) end
+	end)
+end
+
+-- FX SETTINGS
+fxBox(0,"EQ LOW (-10..10)",function(v) eq.LowGain=v end)
+fxBox(50,"EQ MID (-10..10)",function(v) eq.MidGain=v end)
+fxBox(100,"EQ HIGH (-10..10)",function(v) eq.HighGain=v end)
+fxBox(150,"Bass Boost (0-50)",function(v) bassPower=v end)
+fxBox(200,"Treble (+/-10)",function(v) eq.HighGain=v end)
+fxBox(250,"Echo (0-1)",function(v) eq.WetLevel=v end)
+fxBox(300,"Reverb (0-1)",function(v) eq.DecayTime=v end)
+
+-- FX TOGGLE
+fxBtn.MouseButton1Click:Connect(function()
+	fx.Visible = not fx.Visible
+end)
+
+-- VISUALIZER ПОД КНОПКАМИ FX, -, X
+local visBars = {}
+local barCount = 25
+for i=1,barCount do
+	local bar = Instance.new("Frame", top)
+	bar.AnchorPoint = Vector2.new(0.5,1)
+	bar.Position = UDim2.new(i/(barCount+1),0,1,0)
+	bar.Size = UDim2.new(0,5,0,4)
+	bar.BackgroundColor3 = Color3.fromHSV(i/barCount,1,1)
+	Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+	table.insert(visBars,bar)
+end
+
+RunService.RenderStepped:Connect(function()
+	if sound.IsPlaying then
+		local loud = math.clamp(sound.PlaybackLoudness/250,0,1)
+		local maxHeight = top.Size.Y.Offset - 6
+		for i,bar in ipairs(visBars) do
+			local multiplier = 0.5 + math.random()
+			local newHeight = 6 + loud*30*bassPower*multiplier
+			if newHeight > maxHeight then
+				local scale = maxHeight/newHeight
+				newHeight = newHeight * scale
+			end
+			bar.Size = UDim2.new(0,5,0,newHeight)
+			bar.Position = UDim2.new(i/(barCount+1),1,0,top.Size.Y.Offset - newHeight) -- снизу вверх
+		end
+	end
+end)
+
+-- MINI MENU
+local mini = Instance.new("TextButton", gui)
+mini.Size = UDim2.fromScale(0.06,0.1)
+mini.Position = UDim2.fromScale(0.02,0.45)
+mini.Text = "🎵"
+mini.Visible = false
+mini.Active = true
+mini.Draggable = true
+mini.BackgroundColor3 = Color3.fromRGB(40,40,60)
+Instance.new("UICorner", mini).CornerRadius = UDim.new(1,0)
+
+minBtn.MouseButton1Click:Connect(function()
+	main.Visible = false
+	mini.Visible = true
+end)
+
+mini.MouseButton1Click:Connect(function()
+	main.Visible = true
+	mini.Visible = false
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	sound:Stop()
+	gui:Destroy()
+end)
